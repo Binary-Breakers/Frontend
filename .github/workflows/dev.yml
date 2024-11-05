@@ -1,8 +1,6 @@
 name: Sync with Original Repo (Dev Branch)
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"  # Every 10 minutes
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
