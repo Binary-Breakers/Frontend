@@ -1,0 +1,39 @@
+name: Sync with Original Repo (Dev Branch)
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # Every 10 minutes
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  sync-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout forked repo
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false  # Disable GitHub token for this step
+
+      - name: Configure Git
+        run: |
+          git config user.name "karam14"
+          git config user.email "krm-011@hotmail.com"
+        
+      - name: Sync dev branch with upstream (reset)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Set authenticated remote URL
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/karam14/binary-breakers-frontend.git
+          
+          # Add upstream and fetch changes
+          git remote add upstream https://github.com/Binary-Breakers/Frontend.git || true
+          git fetch upstream
+          
+          # Reset dev branch to match upstream/dev
+          git checkout dev
+          git reset --hard upstream/dev
+          
+          # Force-push to the fork's dev branch
+          git push origin dev --force

@@ -1,2 +1,2 @@
 # Frontend
-Frontend for Binary Breakers Application
+NextJS Frontend for Binary Breakers Application
