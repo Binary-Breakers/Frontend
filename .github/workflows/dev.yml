@@ -20,15 +20,20 @@ jobs:
           git config user.name "karam14"
           git config user.email "krm-011@hotmail.com"
         
-      - name: Add original repo as remote
-        run: |
-          git remote add upstream https://github.com/Binary-Breakers/Frontend.git
-          git fetch upstream
-          git checkout dev
-          git merge upstream/dev
-          
-      - name: Push changes to forked repo
+      - name: Sync dev branch with upstream (reset)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push origin dev
+          # Set authenticated remote URL
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/karam14/binary-breakers-frontend.git
+          
+          # Add upstream and fetch changes
+          git remote add upstream https://github.com/Binary-Breakers/Frontend.git || true
+          git fetch upstream
+          
+          # Reset dev branch to match upstream/dev
+          git checkout dev
+          git reset --hard upstream/dev
+          
+          # Force-push to the fork's dev branch
+          git push origin dev --force
