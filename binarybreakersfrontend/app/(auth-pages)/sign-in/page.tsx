@@ -7,38 +7,57 @@ import Link from "next/link";
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
+
   return (
-    <form className="flex-1 flex flex-col min-w-64">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground">
-        Don't have an account?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Sign up
-        </Link>
-      </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-        <Label htmlFor="email">Email</Label>
-        <Input name="email" placeholder="you@example.com" required />
-        <div className="flex justify-between items-center">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
-          >
-            Forgot Password?
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6 sm:p-12">
+      <form className="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 pt-6 pb-8 mb-4 max-w-sm w-full">
+        <h1 className="text-3xl font-semibold text-center text-gray-800 dark:text-gray-200 mb-4">Welcome Back</h1>
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-8 text-sm">
+          Don&apos;t have an account?{" "}
+          <Link className="text-blue-600 dark:text-blue-400 font-medium hover:underline" href="/sign-up">
+            Sign up
           </Link>
+        </p>
+
+        <div className="mb-6">
+          <Label htmlFor="email" className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email</Label>
+          <Input
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700"
+          />
         </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
-          required
-        />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
-        </SubmitButton>
+
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 text-sm font-bold">Password</Label>
+            <Link className="text-xs text-blue-600 dark:text-blue-400 hover:underline" href="/forgot-password">
+              Forgot Password?
+            </Link>
+          </div>
+          <Input
+            name="password"
+            type="password"
+            placeholder="Your password"
+            required
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700"
+          />
+        </div>
+
+        <div className="flex items-center justify-center">
+          <SubmitButton
+            pendingText="Signing In..."
+            formAction={signInAction}
+            className="bg-blue-500 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Sign in
+          </SubmitButton>
+        </div>
+
         <FormMessage message={searchParams} />
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
