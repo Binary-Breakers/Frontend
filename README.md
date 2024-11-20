@@ -1,4 +1,4 @@
-# Readme
+# ReadMe
 Frontend for Binary Breakers Application
 
 # Usage
