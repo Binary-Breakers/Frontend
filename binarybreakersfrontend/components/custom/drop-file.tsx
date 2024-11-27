@@ -29,12 +29,12 @@ export default function DragAndDrop() {
         }
     }
 
-    function handleDrop(e: any) {
+    function handleDrop(e: React.DragEvent<HTMLFormElement>) {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            if (e.target.files.length === 1) {
+            if (e.dataTransfer.files.length === 1) {
                 setFiles(() => [e.dataTransfer.files[0]]);
                 setDragTextActive(true);
             } else {
