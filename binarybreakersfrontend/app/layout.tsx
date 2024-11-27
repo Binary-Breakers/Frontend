@@ -57,6 +57,7 @@ export default function RootLayout({
                     <DropDown label="Platform" array={["Windows", "Linux"]} className="w-full"></DropDown>
                   </div>
                 </div>
+                <Input className="w-full" type="number" min={1}></Input>
                 <Dropfile></Dropfile>
                 {/* <div className="max-w-5xl my-5">
                   <div className="inline-block w-full h-30 bg-zinc-500 p-10 rounded-xl border-2 border-white border-dashed">
@@ -74,8 +75,6 @@ export default function RootLayout({
             </div>
           </main>
         </ThemeProvider>
-        <script src="./../node_modules/lodash/lodash.min.js"></script>
-        <script src="./../node_modules/dropzone/dist/dropzone-min.js"></script>
       </body>
     </html>
   );

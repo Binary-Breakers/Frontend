@@ -1,112 +1,153 @@
 "use client";
 
+import { useRef, useState } from "react";
+export default function DragAndDrop() {
+    const [dragActive, setDragActive] = useState<boolean>(false);
+    const [dragText, setDragTextActive] = useState<boolean>(false);
+    const inputRef = useRef<any>(null);
+    const [files, setFiles] = useState<any>([]);
 
-export default function Dropfile() {
+    function handleChange(e: any) {
+        e.preventDefault();
+        console.log("File has been added");
+        if (e.target.files && e.target.files[0]) {
+            console.log(e.target.files);
+            if (e.target.files.length === 1) {
+                setFiles((prevState: any) => [...prevState, e.target.files[0]]);
+                setDragTextActive(true);
+            } else {
+                console.log("Please select only one file");
+            }
+        }
+    }
+
+    function handleSubmitFile(e: any) {
+        if (files.length === 0) {
+            // no file has been submitted  
+        } else {
+            // write submit logic here  
+        }
+    }
+
+    function handleDrop(e: any) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            if (e.target.files.length === 1) {
+                setFiles((prevState: any) => [...prevState, e.dataTransfer.files[i]]);
+                setDragTextActive(true);
+            } else {
+                console.log("Please select only one file");
+            }
+        }
+    }
+
+    function handleDragLeave(e: any) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+    }
+
+    function handleDragOver(e: any) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(true);
+    }
+
+    function handleDragEnter(e: any) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(true);
+    }
+
+    function removeFile(fileName: any, idx: any) {
+        const newArr = [...files];
+        newArr.splice(idx, 1);
+        setFiles([]);
+        setFiles(newArr);
+        setDragTextActive(false);
+    }
+
+    function openFileExplorer() {
+        inputRef.current.value = "";
+        inputRef.current.click();
+    }
+
     return (
         <>
-            <div id="hs-file-upload-with-limited-file-size" data-hs-file-upload='{
-                "url": "/upload",
-                "maxFilesize": 1,
-                "extensions": {
-                    "default": {
-                    "classNameName": "shrink-0 size-5"
-                    },
-                    "xls": {
-                    "classNameName": "shrink-0 size-5"
-                    },
-                    "zip": {
-                    "classNameName": "shrink-0 size-5"
-                    },
-                    "csv": {
-                    "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2\" strokeLinecap=\"round\" strokeLinejoin=\"round\"><path d=\"M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/><path d=\"m5 12-3 3 3 3\"/><path d=\"m9 18 3-3-3-3\"/></svg>",
-                    "classNameName": "shrink-0 size-5"
-                    }
-                }
-                }'>
-                <template data-hs-file-upload-preview="">
-                <div className="p-3 bg-white border border-solid border-gray-300 rounded-xl dark:bg-neutral-800 dark:border-neutral-600">
-                <div className="mb-1 flex justify-between items-center">
-                    <div className="flex items-center gap-x-3">
-                    <span className="size-10 flex justify-center items-center border border-gray-200 text-gray-500 rounded-lg dark:border-neutral-700 dark:text-neutral-500" data-hs-file-upload-file-icon="">
-                        <img className="rounded-lg hidden" data-dz-thumbnail=""/>
-                    </span>
-                    <div>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white">
-                        <span className="truncate inline-block max-w-[300px] align-bottom" data-hs-file-upload-file-name=""></span>.<span data-hs-file-upload-file-ext=""></span>
+            <form
+                className={`p-4 text-center flex flex-col items-center justify-center`}
+                onDragEnter={handleDragEnter}
+                onSubmit={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+            >
+                <div className="p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl dark:bg-neutral-800 dark:border-neutral-600  flex-col w-4/5 h-2/3" data-hs-file-upload-trigger="">
+                    <div className="text-center" id="dragText">
+                        <svg className="w-16 text-gray-400 mx-auto dark:text-neutral-400" width="70" height="46" viewBox="0 0 70 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6.05172 9.36853L17.2131 7.5083V41.3608L12.3018 42.3947C9.01306 43.0871 5.79705 40.9434 5.17081 37.6414L1.14319 16.4049C0.515988 13.0978 2.73148 9.92191 6.05172 9.36853Z" fill="currentColor" stroke="currentColor" strokeWidth="2" className="fill-white stroke-gray-400 dark:fill-neutral-800 dark:stroke-neutral-500"></path>
+                            <path d="M63.9483 9.36853L52.7869 7.5083V41.3608L57.6982 42.3947C60.9869 43.0871 64.203 40.9434 64.8292 37.6414L68.8568 16.4049C69.484 13.0978 67.2685 9.92191 63.9483 9.36853Z" fill="currentColor" stroke="currentColor" strokeWidth="2" className="fill-white stroke-gray-400 dark:fill-neutral-800 dark:stroke-neutral-500"></path>
+                            <rect x="17.0656" y="1.62305" width="35.8689" height="42.7541" rx="5" fill="currentColor" stroke="currentColor" strokeWidth="2" className="fill-white stroke-gray-400 dark:fill-neutral-800 dark:stroke-neutral-500"></rect>
+                            <path d="M47.9344 44.3772H22.0655C19.3041 44.3772 17.0656 42.1386 17.0656 39.3772L17.0656 35.9161L29.4724 22.7682L38.9825 33.7121C39.7832 34.6335 41.2154 34.629 42.0102 33.7025L47.2456 27.5996L52.9344 33.7209V39.3772C52.9344 42.1386 50.6958 44.3772 47.9344 44.3772Z" stroke="currentColor" strokeWidth="2" className="stroke-gray-400 dark:stroke-neutral-500"></path>
+                            <circle cx="39.5902" cy="14.9672" r="4.16393" stroke="currentColor" strokeWidth="2" className="stroke-gray-400 dark:stroke-neutral-500"></circle>
+                        </svg>
+
+                        {dragText === false && (
+                            <div className="mt-4 flex flex-wrap justify-center text-sm leading-6 text-gray-600">
+
+                                <input
+                                    placeholder="fileInput"
+                                    className="hidden"
+                                    ref={inputRef}
+                                    type="file"
+                                    multiple={true}
+                                    onChange={handleChange}
+                                    accept=".c"
+                                />
+
+                                <span className="pe-1 font-medium text-gray-800 dark:text-neutral-200">
+                                    Drag & Drop file or{" "}
+                                    <span
+                                        className="font-bold text-blue-600 cursor-pointer"
+                                        onClick={openFileExplorer}
+                                    >
+                                        <u>Select file</u>
+                                    </span>{" "}
+                                    to upload
+                                </span>
+                                {/* <span className="bg-white font-semibold text-blue-600 hover:text-blue-700 rounded-lg decoration-2 hover:underline focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 dark:bg-neutral-800 dark:text-blue-500 dark:hover:text-blue-600">browse</span> */}
+                            </div>
+                        )}
+
+                        <p className="mt-1 text-xs text-gray-400 dark:text-neutral-400">
+                            Pick a file up to 2MB.
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-neutral-500" data-hs-file-upload-file-size="" data-hs-file-upload-file-success=""></p>
-                        <p className="text-xs text-red-500 hidden" data-hs-file-upload-file-error="">File exceeds size limit.</p>
                     </div>
+                    <div className="flex flex-col items-center p-3">
+                        {files.map((file: any, idx: any) => (
+                            <div key={idx} className="flex flex-row space-x-5">
+                                <span>{file.name}</span>
+                                <span
+                                    className="text-red-500 cursor-pointer"
+                                    onClick={() => removeFile(file.name, idx)}
+                                >
+                                    remove
+                                </span>
+                            </div>
+                        ))}
                     </div>
-                    <div className="flex items-center gap-x-2">
-                    <span className="hs-tooltip [--placement:top] inline-block hidden" data-hs-file-upload-file-error="">
-                        <span className="hs-tooltip-toggle text-red-500 hover:text-red-800 focus:outline-none focus:text-red-800 dark:text-red-500 dark:hover:text-red-200 dark:focus:text-red-200">
-                        <svg className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" x2="12" y1="8" y2="12"></line>
-                            <line x1="12" x2="12.01" y1="16" y2="16"></line>
-                        </svg>
-                        <span className="hs-tooltip-content max-w-[100px] hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700" role="tooltip">
-                            Please try to upload a file smaller than 1MB.
-                        </span>
-                        </span>
-                    </span>
-                    <button type="button" className="text-gray-500 hover:text-gray-800 focus:outline-none focus:text-gray-800 dark:text-neutral-500 dark:hover:text-neutral-200 dark:focus:text-neutral-200" data-hs-file-upload-reload="">
-                        <svg className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
-                        <path d="M21 3v5h-5"></path>
-                        </svg>
-                    </button>
-                    <button type="button" className="text-gray-500 hover:text-gray-800 focus:outline-none focus:text-gray-800 dark:text-neutral-500 dark:hover:text-neutral-200 dark:focus:text-neutral-200" data-hs-file-upload-remove="">
-                        <svg className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        <line x1="10" x2="10" y1="11" y2="17"></line>
-                        <line x1="14" x2="14" y1="11" y2="17"></line>
-                        </svg>
-                    </button>
-                    </div>
-                </div>
+                </div >
+                {/* <button  
+          className="bg-black rounded-lg p-2 mt-3 w-auto"  
+          onClick={handleSubmitFile}  
+        >  
+          <span className="p-2 text-white">Submit</span>  
+        </button> */}
 
-                <div className="flex items-center gap-x-3 whitespace-nowrap">
-                    <div className="flex w-full h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-neutral-700" role="progressbar" aria-valuenow={0} aria-valuemin={0} aria-valuemax={100} data-hs-file-upload-progress-bar="">
-                    <div className="flex flex-col justify-center rounded-full overflow-hidden bg-blue-600 text-xs text-white text-center whitespace-nowrap transition-all duration-500 hs-file-upload-complete:bg-green-500 w-0" data-hs-file-upload-progress-bar-pane=""></div>
-                    </div>
-                    <div className="w-10 text-end">
-                    <span className="text-sm text-gray-800 dark:text-white">
-                        <span data-hs-file-upload-progress-bar-value="">0</span>%
-                    </span>
-                    </div>
-                </div>
-                </div>
-            </template>
-
-            <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl dark:bg-neutral-800 dark:border-neutral-600" data-hs-file-upload-trigger="">
-                <div className="text-center">
-                <span className="inline-flex justify-center items-center size-16 bg-gray-100 text-gray-800 rounded-full dark:bg-neutral-700 dark:text-neutral-200">
-                    <svg className="shrink-0 size-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" x2="12" y1="3" y2="15"></line>
-                    </svg>
-                </span>
-
-                <div className="mt-4 flex flex-wrap justify-center text-sm leading-6 text-gray-600">
-                    <span className="pe-1 font-medium text-gray-800 dark:text-neutral-200">
-                    Drop your file here or
-                    </span>
-                    <span className="bg-white font-semibold text-blue-600 hover:text-blue-700 rounded-lg decoration-2 hover:underline focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 dark:bg-neutral-800 dark:text-blue-500 dark:hover:text-blue-600">browse</span>
-                </div>
-
-                <p className="mt-1 text-xs text-gray-400 dark:text-neutral-400">
-                    Pick a file up to 2MB.
-                </p>
-                </div>
-            </div>
-
-            <div className="mt-4 space-y-2 empty:mt-0" data-hs-file-upload-previews=""></div>
-            </div>
+                {/* </div >   */}
+            </form>
         </>
     );
 }
