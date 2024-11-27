@@ -4,8 +4,8 @@ import SignUpUserSteps from "@/components/tutorial/sign-up-user-steps";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Input } from "./../components/ui/input";
 import "./globals.css";
-import DropDown from "@/components/dropdown";
-import Dropfile from "@/components/drop-file";
+import DropDown from "@/components/custom/dropdown";
+import Dropfile from "@/components/custom/drop-file";
 
 export default async function Index() {
 	return (

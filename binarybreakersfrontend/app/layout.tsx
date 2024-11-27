@@ -8,8 +8,8 @@ import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import { Input } from "./../components/ui/input";
 import "./globals.css";
-import DropDown from "@/components/dropdown";
-import Dropfile from "@/components/drop-file";
+import DropDown from "@/components/custom/dropdown";
+import Dropfile from "@/components/custom/drop-file";
 
 const defaultUrl = process.env.VERCEL_URL
 	? `https://${process.env.VERCEL_URL}`
