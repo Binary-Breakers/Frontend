@@ -6,6 +6,7 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
+import { Input } from "./../components/ui/input";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -40,8 +41,30 @@ export default function RootLayout({
                 </div>
               </nav>
               <div className="flex flex-col gap-20 max-w-5xl p-5">
+                <h1 className="text-4xl">TITLE A LA BA SA QA NA TA</h1>
+                <div className="w-full flex justify-center items-center gap-10">
+                  <div>
+                    Input
+                    <Input className="w-40"></Input>
+                  </div>
+                  <div>
+                    Input
+                    <Input className="w-40"></Input>
+                  </div>
+                  <div>
+                    Input
+                    <Input className="w-40"></Input>
+                  </div>
+                </div>
+                <div className="max-w-5xl my-5">
+                  <div className="inline-block w-full h-30 bg-zinc-500 p-10 rounded-xl border-2 border-white border-dashed">
+                    backdrop
+                  </div>
+                </div>
                 {children}
               </div>
+
+              
 
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
                 <ThemeSwitcher />

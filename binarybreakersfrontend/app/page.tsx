@@ -6,7 +6,9 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 export default async function Index() {
   return (
     <>
-    <main>Hello World!</main>
+      <div>
+        <h1>TITLE A LA BA SA QA NA TA</h1>
+      </div>
     </>
   );
 }
