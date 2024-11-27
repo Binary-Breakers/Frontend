@@ -13,7 +13,7 @@ export default function DragAndDrop() {
         if (e.target.files && e.target.files[0]) {
             console.log(e.target.files);
             if (e.target.files.length === 1) {
-                setFiles((prevState: any) => [...prevState, e.target.files[0]]);
+                setFiles(() => [e.target.files[0]]);
                 setDragTextActive(true);
             } else {
                 console.log("Please select only one file");
@@ -35,7 +35,7 @@ export default function DragAndDrop() {
         setDragActive(false);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             if (e.target.files.length === 1) {
-                setFiles((prevState: any) => [...prevState, e.dataTransfer.files[i]]);
+                setFiles(() => [e.dataTransfer.files[0]]);
                 setDragTextActive(true);
             } else {
                 console.log("Please select only one file");

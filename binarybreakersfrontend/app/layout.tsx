@@ -57,7 +57,8 @@ export default function RootLayout({
                     <DropDown label="Platform" array={["Windows", "Linux"]} className="w-full"></DropDown>
                   </div>
                 </div>
-                <Input className="w-full" type="number" min={1}></Input>
+                Please add compile arguments
+                <Input className="w-full" type="text" aria-label="Please add compile arguments"></Input>
                 <Dropfile></Dropfile>
                 {/* <div className="max-w-5xl my-5">
                   <div className="inline-block w-full h-30 bg-zinc-500 p-10 rounded-xl border-2 border-white border-dashed">
