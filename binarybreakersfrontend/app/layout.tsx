@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import { Input } from "./../components/ui/input";
 import "./globals.css";
+import DropDown from "@/components/dropdown";
+import Dropfile from "@/components/drop-file";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -40,27 +42,27 @@ export default function RootLayout({
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
               </nav>
-              <div className="flex flex-col gap-20 max-w-5xl p-5">
-                <h1 className="text-4xl">TITLE A LA BA SA QA NA TA</h1>
+              <div className="flex flex-col gap-x-20 gap-y-10 max-w-6xl p-5">
+                <h1 className="text-4xl text-center">TITLE A LA BA SA QA NA TA</h1>
                 <div className="w-full flex justify-center items-center gap-10">
-                  <div>
-                    Input
-                    <Input className="w-40"></Input>
+                  <div className="w-3/12">
+                    Variants
+                    <Input className="w-full" type="number" min={1}></Input>
                   </div>
-                  <div>
-                    Input
-                    <Input className="w-40"></Input>
+                  <div className="w-1/2">
+                    Vulnerability type
+                    <Input className="w-full"></Input>
                   </div>
-                  <div>
-                    Input
-                    <Input className="w-40"></Input>
+                  <div className="w-3/12">
+                    <DropDown label="Platform" array={["Windows", "Linux"]} className="w-full"></DropDown>
                   </div>
                 </div>
-                <div className="max-w-5xl my-5">
+                <Dropfile></Dropfile>
+                {/* <div className="max-w-5xl my-5">
                   <div className="inline-block w-full h-30 bg-zinc-500 p-10 rounded-xl border-2 border-white border-dashed">
                     backdrop
                   </div>
-                </div>
+                </div> */}
                 {children}
               </div>
 
@@ -72,6 +74,8 @@ export default function RootLayout({
             </div>
           </main>
         </ThemeProvider>
+        <script src="./../node_modules/lodash/lodash.min.js"></script>
+        <script src="./../node_modules/dropzone/dist/dropzone-min.js"></script>
       </body>
     </html>
   );
