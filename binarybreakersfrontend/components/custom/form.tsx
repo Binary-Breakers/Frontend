@@ -3,28 +3,26 @@ import Dropfile from "@/components/custom/drop-file";
 import VulnType from "@/components/custom/vuln-type";
 import VariantType from "@/components/custom/variant-type";
 import CompilerOptions from "@/components/custom/compile-options";
-import  SubmitButton from "@/components/custom/submit-btn";
-import {DropDownPlatform} from "@/components/custom/drop-down-v2";
+import SubmitButton from "@/components/custom/submit-btn";
+import { DropDownPlatform } from "@/components/custom/drop-down-v2";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
-
+import { toast } from "react-hot-toast";
 
 export default function Form() {
     const [variantType, setVariantType] = useState<number>(0);
     const [compilerOptions, setCompilerOptions] = useState<string>("");
     const [vulnType, setVulnType] = useState<string>("");
-    const [platform, setPlatform] = useState("")
+    const [platform, setPlatform] = useState("");
     const [files, setFiles] = useState<any>([]);
     const [progress, setProgress] = useState<number>(0);
     const [progressLabel, setProgressLabel] = useState<string>("Idle");
     const [isDisabled, setIsDisabled] = useState<boolean>(false);
 
-
-
     async function onclick() {
         console.log("clicked");
         if (variantType < 1 || variantType > 75) {
-            showError("To much or to few number of variants chosen");
+            showError("please enter a variant number between 1 and 75");
             return;
         }
         if (vulnType === "") {
@@ -32,25 +30,25 @@ export default function Form() {
             return;
         }
         if (platform === "") {
-            showError("No platform chosen");
+            showError("please choose a platform");
             return;
         }
         if (files.length === 0) {
             showError("No files chosen");
             return;
         }
-              // Disable inputs when request starts
-              setIsDisabled(true);
 
-              try {
-                  await sendRequest();
-              } catch (error: any) {
-                  showError(error.message);
-              } finally {
-                  // Re-enable inputs when request is completed
-                  setIsDisabled(false);
-              }
+        // Disable inputs when request starts
+        setIsDisabled(true);
 
+        try {
+            await sendRequest();
+        } catch (error: any) {
+            showError(error.message);
+        } finally {
+            // Re-enable inputs when request is completed
+            setIsDisabled(false);
+        }
     }
 
     function parsePlatform(platform: string) {
@@ -62,10 +60,10 @@ export default function Form() {
             default:
                 return -1;
         }
-    } 
+    }
 
     async function readFileContent(file: File): Promise<string> {
-        return await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
                 const content = reader.result as string;
@@ -85,115 +83,140 @@ export default function Form() {
             const fileContent = await readFileContent(files[0]);
             setProgress(30);
             setProgressLabel("Analyzing Source Code");
+
             const response = await fetch("http://localhost:5294/api/Analysis", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    SourceCode: fileContent, // only one file for now
+                    SourceCode: fileContent,
                     VulnerabilityType: vulnType,
-                    Platform: parsePlatform(platform)
-                })
+                    Platform: parsePlatform(platform),
+                }),
             });
 
             if (!response.ok) {
-                throw new Error("Request failed");
+                console.error("Request failed:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: response.url,
+                });
+
+                const errorDetails = await response.text();
+                console.error("Error details from server:", errorDetails);
+
+                toast.error(`Error: ${response.status} - ${response.statusText}`, {
+                    duration: 5000,
+                });
+
+                throw new Error(`Request failed with status ${response.status} - ${response.statusText}`);
             }
+
             setProgress(60);
             setProgressLabel("Now generating variants");
 
             const data = await response.json();
             console.log(data);
 
-            const analysisResult = {
-                id: data.id,
-                vulnerabilityType: data.vulnerabilityType,
-                isValid: data.isValid,
-                explanation: data.explanation
-            };
-
-            const seedCode = {
-                sourceCode: fileContent,
-                vulnerabilityType: vulnType,
-                platform: parsePlatform(platform)
-            };
-
             const requestData = {
-                analysisResult,
-                seedCode,
+                analysisResult: {
+                    id: data.id,
+                    vulnerabilityType: data.vulnerabilityType,
+                    isValid: data.isValid,
+                    explanation: data.explanation,
+                },
+                seedCode: {
+                    sourceCode: fileContent,
+                    vulnerabilityType: vulnType,
+                    platform: parsePlatform(platform),
+                },
                 maxVariants: variantType,
-                CompileParameters: compilerOptions
+                CompileParameters: compilerOptions,
             };
 
-            await fetch("http://localhost:5294/api/Generation", {
+            const generationResponse = await fetch("http://localhost:5294/api/Generation", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(requestData)
-            }).then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.blob(); // Convert the response into a Blob
-              })
-              .then(blob => {
-                // Create a URL for the Blob
-                const blobUrl = URL.createObjectURL(blob);
-            
-                // Create an anchor element to trigger the download
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = 'downloaded-file'; // Specify the file name for the download
-                setProgress(90);
-                setProgressLabel("Downloading Results");
-                // Trigger the download
-                document.body.appendChild(a);
-                a.click();
-            
-                // Cleanup
-                a.remove();
-                URL.revokeObjectURL(blobUrl);
-                setProgress(100);
-                setProgressLabel("Completed");
-              })
-              .catch(error => console.error('There was a problem with the fetch operation:', error));
+                body: JSON.stringify(requestData),
+            });
 
-    
+            if (!generationResponse.ok) {
+                console.error("Generation failed:", {
+                    status: generationResponse.status,
+                    statusText: generationResponse.statusText,
+                    url: generationResponse.url,
+                });
+
+                const generationErrorDetails = await generationResponse.text();
+                console.error("Generation error details:", generationErrorDetails);
+
+                toast.error(`Error: ${generationResponse.status} - ${generationResponse.statusText}`, {
+                    duration: 5000,
+                });
+
+                throw new Error(`Generation failed: ${generationResponse.status} - ${generationResponse.statusText}`);
+            }
+
+            const blob = await generationResponse.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = "generated-variants.zip";
+            setProgress(90);
+            setProgressLabel("Downloading Results");
+            document.body.appendChild(a);
+            a.click();
+
+            a.remove();
+            URL.revokeObjectURL(blobUrl);
+            setProgress(100);
+            setProgressLabel("Completed");
         } catch (error: any) {
-            showError(error.message);
+            // Reset progress on error
+            setProgress(0);
+            setProgressLabel("Idle");
+
+            if (error.message === "Failed to fetch") {
+                toast.error("Unable to connect to the server. Please check if the backend is running.", {
+                    duration: 5000,
+                });
+                console.error("Network error: Failed to fetch. Possible backend issue or incorrect URL.");
+            } else {
+                showError(error.message);
+            }
         }
     }
 
     function showError(errorMessage: string) {
-        console.log(errorMessage);
-
+        toast.error(errorMessage, { duration: 5000 });
+        console.error(errorMessage);
+        setProgress(0); // Reset progress on general errors
+        setProgressLabel("Idle");
     }
 
-    
-
-    //fetch here
-
     return (
-        <>            
+        <>
             <div className="w-full flex justify-center items-center gap-10">
                 <div className="w-3/12">
-                    <VariantType setVariantType={setVariantType}></VariantType>
+                    <VariantType setVariantType={setVariantType} />
                 </div>
                 <div className="w-1/2">
-                    <VulnType setVulnType={setVulnType}></VulnType>
+                    <VulnType setVulnType={setVulnType} />
                 </div>
                 <div className="w-3/12">
-                    {/* <DropDown label="Platform" array={["Windows", "Linux"]} className="w-full"></DropDown> */}
-                    <DropDownPlatform platform={platform} setPlatform={setPlatform}></DropDownPlatform>
+                    <DropDownPlatform platform={platform} setPlatform={setPlatform} />
                 </div>
             </div>
             <div>
-                <CompilerOptions setCompilerOptions={setCompilerOptions}></CompilerOptions>
+                <CompilerOptions setCompilerOptions={setCompilerOptions} />
             </div>
-            {/* er moeten nog error messages weergeven worden aan de user */}
-            <Dropfile files={files} setFiles={setFiles}></Dropfile> 
+            <Dropfile files={files} setFiles={setFiles} />
             <div className="flex justify-center">
-            <SubmitButton onclick={onclick} disabled={isDisabled} />
+                <SubmitButton onclick={onclick} disabled={isDisabled} />
             </div>
             <div className="mt-6">
                 <div className="text-center mb-2 text-lg font-semibold">
