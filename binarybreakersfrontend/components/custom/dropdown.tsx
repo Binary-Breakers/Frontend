@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface DropDownProps {
     array: string[]; // Array of dropdown options
@@ -20,7 +20,7 @@ const DropDown = ({array, label, className}: DropDownProps) => {
                     <DropdownMenu>
                         <DropdownMenuTrigger className="min-w-full flex justify-between">
                             <span className="flex-grow-1 mr-3">{selection}</span>
-                            <span className="float-right flex-grow-0">V</span>
+                            <span className="float-right flex-grow-0">V</span>//TODO: Add chevron down icon
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             {array.map((option, index) => <DropdownMenuItem key={index} onClick={() => setSelection(option)}>{option}</DropdownMenuItem>)}

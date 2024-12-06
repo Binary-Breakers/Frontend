@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-const frameworks = [
+const platforms = [
   {
     platform: "Windows",
     label: "Windows",
@@ -44,21 +44,21 @@ export function DropDownPlatform({ platform, setPlatform }: { platform: string; 
             className="w-[200px] justify-between"
             >
             {platform
-                ? frameworks.find((framework) => framework.platform === platform)?.label
+                ? platforms.find((platformTuple) => platformTuple.platform === platform)?.label
                 : "Select platform..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[200px] p-0">
             <Command>
-            <CommandInput placeholder="Search framework..." />
+            <CommandInput placeholder="Search platform..." />
             <CommandList>
-                <CommandEmpty>No framework found.</CommandEmpty>
+                <CommandEmpty>No platform found.</CommandEmpty>
                 <CommandGroup>
-                {frameworks.map((framework) => (
+                {platforms.map((platformTuple) => (
                     <CommandItem
-                    key={framework.platform}
-                    value={framework.platform}
+                    key={platformTuple.platform}
+                    value={platformTuple.platform}
                     onSelect={(currentValue) => {
                         setPlatform(currentValue === platform ? "" : currentValue)
                         setOpen(false)
@@ -67,10 +67,10 @@ export function DropDownPlatform({ platform, setPlatform }: { platform: string; 
                     <Check
                         className={cn(
                         "mr-2 h-4 w-4",
-                        platform === framework.platform ? "opacity-100" : "opacity-0"
+                        platform === platformTuple.platform ? "opacity-100" : "opacity-0"
                         )}
                     />
-                    {framework.label}
+                    {platformTuple.label}
                     </CommandItem>
                 ))}
                 </CommandGroup>

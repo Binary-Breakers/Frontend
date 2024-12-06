@@ -1,8 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
 
-
-
 export default function VariantType({setVariantType}: {setVariantType: (value: number) => void}) {
     return (
         <>            

@@ -21,14 +21,6 @@ export default function DragAndDrop({files, setFiles}: {files: any, setFiles: (v
         }
     }
 
-    function handleSubmitFile(e: any) {
-        if (files.length === 0) {
-            // no file has been submitted  
-        } else {
-            // write submit logic here  
-        }
-    }
-
     function handleDrop(e: React.DragEvent<HTMLFormElement>) {
         e.preventDefault();
         e.stopPropagation();
@@ -117,7 +109,6 @@ export default function DragAndDrop({files, setFiles}: {files: any, setFiles: (v
                                     </span>{" "}
                                     to upload
                                 </span>
-                                {/* <span className="bg-white font-semibold text-blue-600 hover:text-blue-700 rounded-lg decoration-2 hover:underline focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 dark:bg-neutral-800 dark:text-blue-500 dark:hover:text-blue-600">browse</span> */}
                             </div>
                         )}
 
