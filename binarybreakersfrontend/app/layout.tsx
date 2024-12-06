@@ -17,7 +17,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata = {
 	metadataBase: new URL(defaultUrl),
 	title: "Binary Breakers",
-	description: "Made with love",
+	description: "This is a web application for generating variants of vulnerable code.",
 	icons: {
         icon: "/favicon.ico",
 	},
