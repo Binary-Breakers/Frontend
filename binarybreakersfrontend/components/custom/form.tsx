@@ -2,40 +2,80 @@
 import Dropfile from "@/components/custom/drop-file";
 import VulnType from "@/components/custom/vuln-type";
 import VariantType from "@/components/custom/variant-type";
-import CompileType from "@/components/custom/compile-type";
-import SubmitButton from "@/components/custom/submit-btn";
-import { DropDownPlatform } from "@/components/custom/drop-down-v2";
+import CompilerOptions from "@/components/custom/compile-options";
+import  SubmitButton from "@/components/custom/submit-btn";
+import {DropDownPlatform} from "@/components/custom/drop-down-v2";
 import { useState } from "react";
-import * as React from "react";
 import { Progress } from "@/components/ui/progress";
+
 
 export default function Form() {
     const [variantType, setVariantType] = useState<number>(0);
-    const [compileType, setCompileType] = useState<string>("");
+    const [compilerOptions, setCompilerOptions] = useState<string>("");
     const [vulnType, setVulnType] = useState<string>("");
-    const [platform, setPlatform] = useState<string>("");
+    const [platform, setPlatform] = useState("")
     const [files, setFiles] = useState<any>([]);
     const [progress, setProgress] = useState<number>(0);
     const [progressLabel, setProgressLabel] = useState<string>("Idle");
+    const [isDisabled, setIsDisabled] = useState<boolean>(false);
 
-    function onclick() {
+
+
+    async function onclick() {
+        console.log("clicked");
         if (variantType < 1 || variantType > 75) {
-            showError("Too many or too few variants chosen");
+            showError("To much or to few number of variants chosen");
             return;
         }
-        if (!vulnType) {
+        if (vulnType === "") {
             showError("No vulnerability type chosen");
             return;
         }
-        if (!platform) {
+        if (platform === "") {
             showError("No platform chosen");
             return;
         }
-        if (!files.length) {
+        if (files.length === 0) {
             showError("No files chosen");
             return;
         }
-        sendRequest();
+              // Disable inputs when request starts
+              setIsDisabled(true);
+
+              try {
+                  await sendRequest();
+              } catch (error: any) {
+                  showError(error.message);
+              } finally {
+                  // Re-enable inputs when request is completed
+                  setIsDisabled(false);
+              }
+
+    }
+
+    function parsePlatform(platform: string) {
+        switch (platform) {
+            case "Windows":
+                return 1;
+            case "Linux":
+                return 0;
+            default:
+                return -1;
+        }
+    } 
+
+    async function readFileContent(file: File): Promise<string> {
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const content = reader.result as string;
+                resolve(content);
+            };
+            reader.onerror = () => {
+                reject(new Error("Failed to read file"));
+            };
+            reader.readAsText(file);
+        });
     }
 
     async function sendRequest() {
@@ -45,94 +85,115 @@ export default function Form() {
             const fileContent = await readFileContent(files[0]);
             setProgress(30);
             setProgressLabel("Analyzing Source Code");
-
             const response = await fetch("http://localhost:5294/api/Analysis", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
-                    SourceCode: fileContent,
+                    SourceCode: fileContent, // only one file for now
                     VulnerabilityType: vulnType,
-                    Platform: parsePlatform(platform),
-                }),
+                    Platform: parsePlatform(platform)
+                })
             });
 
-            if (!response.ok) throw new Error("Analysis request failed");
+            if (!response.ok) {
+                throw new Error("Request failed");
+            }
             setProgress(60);
-            setProgressLabel("Preparing Generation Request");
+            setProgressLabel("Now generating variants");
 
             const data = await response.json();
-            const requestData = {
-                analysisResult: data,
-                seedCode: { sourceCode: fileContent, vulnerabilityType: vulnType, platform: parsePlatform(platform) },
-                maxVariants: variantType,
+            console.log(data);
+
+            const analysisResult = {
+                id: data.id,
+                vulnerabilityType: data.vulnerabilityType,
+                isValid: data.isValid,
+                explanation: data.explanation
             };
 
-            const generationResponse = await fetch("http://localhost:5294/api/Generation", {
+            const seedCode = {
+                sourceCode: fileContent,
+                vulnerabilityType: vulnType,
+                platform: parsePlatform(platform)
+            };
+
+            const requestData = {
+                analysisResult,
+                seedCode,
+                maxVariants: variantType,
+                CompileParameters: compilerOptions
+            };
+
+            await fetch("http://localhost:5294/api/Generation", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestData),
-            });
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestData)
+            }).then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob(); // Convert the response into a Blob
+              })
+              .then(blob => {
+                // Create a URL for the Blob
+                const blobUrl = URL.createObjectURL(blob);
+            
+                // Create an anchor element to trigger the download
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'downloaded-file'; // Specify the file name for the download
+                setProgress(90);
+                setProgressLabel("Downloading Results");
+                // Trigger the download
+                document.body.appendChild(a);
+                a.click();
+            
+                // Cleanup
+                a.remove();
+                URL.revokeObjectURL(blobUrl);
+                setProgress(100);
+                setProgressLabel("Completed");
+              })
+              .catch(error => console.error('There was a problem with the fetch operation:', error));
 
-            if (!generationResponse.ok) throw new Error("Generation request failed");
-            setProgress(90);
-            setProgressLabel("Downloading Results");
-
-            // Handle file download
-            const blob = await generationResponse.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = blobUrl;
-            a.download = "generated-file";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(blobUrl);
-
-            setProgress(100);
-            setProgressLabel("Completed");
+    
         } catch (error: any) {
             showError(error.message);
-            setProgress(0);
-            setProgressLabel("Error");
         }
     }
 
-    async function readFileContent(file: File): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(new Error("Failed to read file"));
-            reader.readAsText(file);
-        });
-    }
-
-    function parsePlatform(platform: string) {
-        return platform === "Windows" ? 1 : platform === "Linux" ? 0 : -1;
-    }
-
     function showError(errorMessage: string) {
-        console.error(errorMessage);
+        console.log(errorMessage);
+
     }
+
+    
+
+    //fetch here
 
     return (
-        <>
+        <>            
             <div className="w-full flex justify-center items-center gap-10">
                 <div className="w-3/12">
-                    <VariantType setVariantType={setVariantType} />
+                    <VariantType setVariantType={setVariantType}></VariantType>
                 </div>
                 <div className="w-1/2">
-                    <VulnType setVulnType={setVulnType} />
+                    <VulnType setVulnType={setVulnType}></VulnType>
                 </div>
                 <div className="w-3/12">
-                    <DropDownPlatform platform={platform} setPlatform={setPlatform} />
+                    {/* <DropDown label="Platform" array={["Windows", "Linux"]} className="w-full"></DropDown> */}
+                    <DropDownPlatform platform={platform} setPlatform={setPlatform}></DropDownPlatform>
                 </div>
             </div>
             <div>
-                <CompileType setCompileType={setCompileType} />
+                <CompilerOptions setCompilerOptions={setCompilerOptions}></CompilerOptions>
             </div>
-            <Dropfile files={files} setFiles={setFiles} />
-            <div className="flex justify-center mt-4">
-                <SubmitButton onclick={onclick} />
+            {/* er moeten nog error messages weergeven worden aan de user */}
+            <Dropfile files={files} setFiles={setFiles}></Dropfile> 
+            <div className="flex justify-center">
+            <SubmitButton onclick={onclick} disabled={isDisabled} />
             </div>
             <div className="mt-6">
                 <div className="text-center mb-2 text-lg font-semibold">
