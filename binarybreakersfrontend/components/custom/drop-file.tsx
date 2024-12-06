@@ -29,7 +29,7 @@ export default function DragAndDrop({files, setFiles}: {files: any, setFiles: (v
         }
     }
 
-    function handleDrop(e: any) {
+    function handleDrop(e: React.DragEvent<HTMLFormElement>) {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
