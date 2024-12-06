@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-export default function DragAndDrop() {
+
+export default function DragAndDrop({files, setFiles}: {files: any, setFiles: (value: any) => void}) {
     const [dragActive, setDragActive] = useState<boolean>(false);
     const [dragText, setDragTextActive] = useState<boolean>(false);
     const inputRef = useRef<any>(null);
-    const [files, setFiles] = useState<any>([]);
 
     function handleChange(e: any) {
         e.preventDefault();
@@ -139,14 +139,7 @@ export default function DragAndDrop() {
                         ))}
                     </div>
                 </div >
-                {/* <button  
-          className="bg-black rounded-lg p-2 mt-3 w-auto"  
-          onClick={handleSubmitFile}  
-        >  
-          <span className="p-2 text-white">Submit</span>  
-        </button> */}
-
-                {/* </div >   */}
+                
             </form>
         </>
     );
