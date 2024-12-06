@@ -18,6 +18,9 @@ export const metadata = {
 	metadataBase: new URL(defaultUrl),
 	title: "Binary Breakers, made with love",
 	description: "The fastest way to speedrun 112% Hollow Knight Steel Soul",
+	icons: {
+        icon: "/favicon.ico",
+	},
 };
 
 export default function RootLayout({

@@ -1,4 +1,5 @@
 "use client";
+
 import Dropfile from "@/components/custom/drop-file";
 import VulnType from "@/components/custom/vuln-type";
 import VariantType from "@/components/custom/variant-type";
@@ -8,6 +9,7 @@ import { DropDownPlatform } from "@/components/custom/drop-down-v2";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "react-hot-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Form() {
     const [variantType, setVariantType] = useState<number>(0);
@@ -18,11 +20,13 @@ export default function Form() {
     const [progress, setProgress] = useState<number>(0);
     const [progressLabel, setProgressLabel] = useState<string>("Idle");
     const [isDisabled, setIsDisabled] = useState<boolean>(false);
+    const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
     async function onclick() {
         console.log("clicked");
         if (variantType < 1 || variantType > 75) {
-            showError("please enter a variant number between 1 and 75");
+            showError("Please enter a variant number between 1 and 75");
             return;
         }
         if (vulnType === "") {
@@ -30,7 +34,7 @@ export default function Form() {
             return;
         }
         if (platform === "") {
-            showError("please choose a platform");
+            showError("Please choose a platform");
             return;
         }
         if (files.length === 0) {
@@ -38,7 +42,8 @@ export default function Form() {
             return;
         }
 
-        // Disable inputs when request starts
+        // Open dialog and disable inputs when request starts
+        setIsDialogOpen(true);
         setIsDisabled(true);
 
         try {
@@ -97,19 +102,8 @@ export default function Form() {
             });
 
             if (!response.ok) {
-                console.error("Request failed:", {
-                    status: response.status,
-                    statusText: response.statusText,
-                    url: response.url,
-                });
-
                 const errorDetails = await response.text();
                 console.error("Error details from server:", errorDetails);
-
-                toast.error(`Error: ${response.status} - ${response.statusText}`, {
-                    duration: 5000,
-                });
-
                 throw new Error(`Request failed with status ${response.status} - ${response.statusText}`);
             }
 
@@ -117,7 +111,6 @@ export default function Form() {
             setProgressLabel("Now generating variants");
 
             const data = await response.json();
-            console.log(data);
 
             const requestData = {
                 analysisResult: {
@@ -144,47 +137,24 @@ export default function Form() {
             });
 
             if (!generationResponse.ok) {
-                console.error("Generation failed:", {
-                    status: generationResponse.status,
-                    statusText: generationResponse.statusText,
-                    url: generationResponse.url,
-                });
-
                 const generationErrorDetails = await generationResponse.text();
                 console.error("Generation error details:", generationErrorDetails);
-
-                toast.error(`Error: ${generationResponse.status} - ${generationResponse.statusText}`, {
-                    duration: 5000,
-                });
-
                 throw new Error(`Generation failed: ${generationResponse.status} - ${generationResponse.statusText}`);
             }
 
             const blob = await generationResponse.blob();
-            const blobUrl = URL.createObjectURL(blob);
+            const url = URL.createObjectURL(blob);
+            setBlobUrl(url);
 
-            const a = document.createElement("a");
-            a.href = blobUrl;
-            a.download = "generated-variants.zip";
-            setProgress(90);
-            setProgressLabel("Downloading Results");
-            document.body.appendChild(a);
-            a.click();
-
-            a.remove();
-            URL.revokeObjectURL(blobUrl);
             setProgress(100);
             setProgressLabel("Completed");
         } catch (error: any) {
-            // Reset progress on error
             setProgress(0);
             setProgressLabel("Idle");
-
             if (error.message === "Failed to fetch") {
                 toast.error("Unable to connect to the server. Please check if the backend is running.", {
                     duration: 5000,
                 });
-                console.error("Network error: Failed to fetch. Possible backend issue or incorrect URL.");
             } else {
                 showError(error.message);
             }
@@ -218,12 +188,30 @@ export default function Form() {
             <div className="flex justify-center">
                 <SubmitButton onclick={onclick} disabled={isDisabled} />
             </div>
-            <div className="mt-6">
-                <div className="text-center mb-2 text-lg font-semibold">
-                    {progressLabel} - {progress}%
-                </div>
-                <Progress value={progress} max={100} className="w-full" />
-            </div>
+
+            {/* Modal for progress */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Processing Request</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4">
+                        <p className="text-lg font-semibold text-center">{progressLabel}</p>
+                        <Progress value={progress} max={100} className="w-full mt-2" />
+                    </div>
+                    {progress === 100 && blobUrl && (
+                        <div className="mt-4 text-center">
+                            <a
+                                href={blobUrl}
+                                download="generated-variants.zip"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                Save Results
+                            </a>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
