@@ -16,8 +16,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
 	metadataBase: new URL(defaultUrl),
-	title: "Binary Breakers, made with love",
-	description: "The fastest way to speedrun 112% Hollow Knight Steel Soul",
+	title: "Binary Breakers",
+	description: "Made with love",
 	icons: {
         icon: "/favicon.ico",
 	},
