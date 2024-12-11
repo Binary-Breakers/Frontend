@@ -190,7 +190,11 @@ export default function Form() {
             </div>
 
             {/* Modal for progress */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+                if (progress === 100) {
+                    setIsDialogOpen(isOpen); // Allow closing only when progress is complete
+                }
+            }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Processing Request</DialogTitle>
