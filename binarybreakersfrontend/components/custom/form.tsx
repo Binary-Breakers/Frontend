@@ -128,7 +128,7 @@ export default function Form() {
                 CompileParameters: compilerOptions,
             };
 
-            await fetch("http://localhost:5294/api/Generation", {
+            const generationResponse = await fetch("http://localhost:5294/api/Generation", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
