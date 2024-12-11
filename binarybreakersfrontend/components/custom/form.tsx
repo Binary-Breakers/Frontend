@@ -1,25 +1,32 @@
 "use client";
+
 import Dropfile from "@/components/custom/drop-file";
 import VulnType from "@/components/custom/vuln-type";
 import VariantType from "@/components/custom/variant-type";
-import CompileType from "@/components/custom/compile-type";
-import  SubmitButton from "@/components/custom/submit-btn";
-import {DropDownPlatform} from "@/components/custom/drop-down-v2";
-import { FormEvent } from 'react';
-import { useRef, useState } from "react";
-import * as React from "react"
+import CompilerOptions from "@/components/custom/compile-options";
+import SubmitButton from "@/components/custom/submit-btn";
+import { DropDownPlatform } from "@/components/custom/drop-down-v2";
+import { useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "react-hot-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Form() {
     const [variantType, setVariantType] = useState<number>(0);
-    const [compileType, setCompileType] = useState<string>("");
+    const [compilerOptions, setCompilerOptions] = useState<string>("");
     const [vulnType, setVulnType] = useState<string>("");
-    const [platform, setPlatform] = React.useState("")
+    const [platform, setPlatform] = useState("");
     const [files, setFiles] = useState<any>([]);
+    const [progress, setProgress] = useState<number>(0);
+    const [progressLabel, setProgressLabel] = useState<string>("Idle");
+    const [isDisabled, setIsDisabled] = useState<boolean>(false);
+    const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-    function onclick() {
+    async function onclick() {
         console.log("clicked");
         if (variantType < 1 || variantType > 75) {
-            showError("To much or to few number of variants chosen");
+            showError("Please enter a variant number between 1 and 75");
             return;
         }
         if (vulnType === "") {
@@ -27,14 +34,26 @@ export default function Form() {
             return;
         }
         if (platform === "") {
-            showError("No platform chosen");
+            showError("Please choose a platform");
             return;
         }
         if (files.length === 0) {
             showError("No files chosen");
             return;
         }
-        sendRequest();
+
+        // Open dialog and disable inputs when request starts
+        setIsDialogOpen(true);
+        setIsDisabled(true);
+
+        try {
+            await sendRequest();
+        } catch (error: any) {
+            showError(error.message);
+        } finally {
+            // Re-enable inputs when request is completed
+            setIsDisabled(false);
+        }
     }
 
     function parsePlatform(platform: string) {
@@ -46,10 +65,10 @@ export default function Form() {
             default:
                 return -1;
         }
-    } 
+    }
 
     async function readFileContent(file: File): Promise<string> {
-        return await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
                 const content = reader.result as string;
@@ -64,99 +83,135 @@ export default function Form() {
 
     async function sendRequest() {
         try {
+            setProgress(10);
+            setProgressLabel("Reading File");
             const fileContent = await readFileContent(files[0]);
+            setProgress(30);
+            setProgressLabel("Analyzing Source Code");
+
             const response = await fetch("http://localhost:5294/api/Analysis", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    SourceCode: fileContent, // only one file for now
+                    SourceCode: fileContent,
                     VulnerabilityType: vulnType,
-                    Platform: parsePlatform(platform)
-                })
+                    Platform: parsePlatform(platform),
+                }),
             });
 
             if (!response.ok) {
-                throw new Error("Request failed");
+                const errorDetails = await response.text();
+                console.error("Error details from server:", errorDetails);
+                throw new Error(`Request failed with status ${response.status} - ${response.statusText}`);
             }
 
+            setProgress(60);
+            setProgressLabel("Now generating variants");
+
             const data = await response.json();
-            console.log(data);
-
-            const analysisResult = {
-                id: data.id,
-                vulnerabilityType: data.vulnerabilityType,
-                isValid: data.isValid,
-                explanation: data.explanation
-            };
-
-            const seedCode = {
-                sourceCode: fileContent,
-                vulnerabilityType: vulnType,
-                platform: parsePlatform(platform)
-            };
 
             const requestData = {
-                analysisResult,
-                seedCode,
-                maxVariants: variantType
+                analysisResult: {
+                    id: data.id,
+                    vulnerabilityType: data.vulnerabilityType,
+                    isValid: data.isValid,
+                    explanation: data.explanation,
+                },
+                seedCode: {
+                    sourceCode: fileContent,
+                    vulnerabilityType: vulnType,
+                    platform: parsePlatform(platform),
+                },
+                maxVariants: variantType,
+                CompileParameters: compilerOptions,
             };
 
             await fetch("http://localhost:5294/api/Generation", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(requestData)
-            }).then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.blob();
-              })
-              .then(blob => {
-                const blobUrl = URL.createObjectURL(blob);
-            
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = 'downloaded-file'; // Specify the file name for the download
-            
-                document.body.appendChild(a);
-                a.click();
-            
-                a.remove();
-                URL.revokeObjectURL(blobUrl);
-              })
-              .catch(error => console.error('There was a problem with the fetch operation:', error));
+                body: JSON.stringify(requestData),
+            });
+
+            if (!generationResponse.ok) {
+                const generationErrorDetails = await generationResponse.text();
+                console.error("Generation error details:", generationErrorDetails);
+                throw new Error(`Generation failed: ${generationResponse.status} - ${generationResponse.statusText}`);
+            }
+
+            const blob = await generationResponse.blob();
+            const url = URL.createObjectURL(blob);
+            setBlobUrl(url);
+
+            setProgress(100);
+            setProgressLabel("Completed");
         } catch (error: any) {
-            showError(error.message);
+            setProgress(0);
+            setProgressLabel("Idle");
+            if (error.message === "Failed to fetch") {
+                toast.error("Unable to connect to the server. Please check if the backend is running.", {
+                    duration: 5000,
+                });
+            } else {
+                showError(error.message);
+            }
         }
     }
 
     function showError(errorMessage: string) {
-        // show error message visually to user
-        console.log(errorMessage);
+        toast.error(errorMessage, { duration: 5000 });
+        console.error(errorMessage);
+        setProgress(0); // Reset progress on general errors
+        setProgressLabel("Idle");
     }
 
     return (
-        <>            
+        <>
             <div className="w-full flex justify-center items-center gap-10">
                 <div className="w-3/12">
-                    <VariantType setVariantType={setVariantType}></VariantType>
+                    <VariantType setVariantType={setVariantType} />
                 </div>
                 <div className="w-1/2">
-                    <VulnType setVulnType={setVulnType}></VulnType>
+                    <VulnType setVulnType={setVulnType} />
                 </div>
                 <div className="w-3/12">
-                    <DropDownPlatform platform={platform} setPlatform={setPlatform}></DropDownPlatform>
+                    <DropDownPlatform platform={platform} setPlatform={setPlatform} />
                 </div>
             </div>
             <div>
-                <CompileType setCompileType={setCompileType}></CompileType>
+                <CompilerOptions setCompilerOptions={setCompilerOptions} />
             </div>
-            <Dropfile files={files} setFiles={setFiles}></Dropfile> 
+            <Dropfile files={files} setFiles={setFiles} />
             <div className="flex justify-center">
-                <SubmitButton onclick={onclick}></SubmitButton>
+                <SubmitButton onclick={onclick} disabled={isDisabled} />
             </div>
+
+            {/* Modal for progress */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Processing Request</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4">
+                        <p className="text-lg font-semibold text-center">{progressLabel}</p>
+                        <Progress value={progress} max={100} className="w-full mt-2" />
+                    </div>
+                    {progress === 100 && blobUrl && (
+                        <div className="mt-4 text-center">
+                            <a
+                                href={blobUrl}
+                                download="generated-variants.zip"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                Save Results
+                            </a>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

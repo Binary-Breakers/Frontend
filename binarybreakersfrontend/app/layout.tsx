@@ -5,11 +5,10 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Link from "next/link";
-import { Input } from "./../components/ui/input";
+
 import "./globals.css";
-import DropDown from "@/components/custom/dropdown";
-import Dropfile from "@/components/custom/drop-file";
+
+import { Toaster } from "react-hot-toast";
 
 const defaultUrl = process.env.VERCEL_URL
 	? `https://${process.env.VERCEL_URL}`
@@ -17,8 +16,11 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
 	metadataBase: new URL(defaultUrl),
-	title: "Binary Breakers, made with love",
-	description: "The fastest way to speedrun 112% Hollow Knight Steel Soul",
+	title: "Binary Breakers",
+	description: "This is a web application for generating variants of vulnerable code.",
+	icons: {
+        icon: "/favicon.ico",
+	},
 };
 
 export default function RootLayout({
@@ -51,6 +53,8 @@ export default function RootLayout({
 							</footer>
 						</div>
 					</main>
+					<Toaster />
+
 				</ThemeProvider>
 			</body>
 		</html>
